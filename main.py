@@ -2,7 +2,7 @@ import os
 import asyncio
 from flask import Flask
 from threading import Thread
-from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup, BotCommand
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -17,11 +17,11 @@ from telegram.ext import (
 BOT_TOKEN = "8210193780:AAG3-gzVcqY7PHAHXT56J1HSBEm2ju6xQk0"
 ADMIN_ID = 5899402664
 LOG_CHANNEL_ID = -1003948006284
-SUPPORT_USERNAME = "ziaulx"  # 👈 আপনার টেলিগ্রাম ইউজারনেম সেটিং সম্পন্ন হয়েছে
+SUPPORT_USERNAME = "ziaulx"
 
 # Coin rates per 1000 (1K) coins
 COIN_RATES_PER_1K = {
-    "Niva Coin": 4.70,
+    "Niva Coin": 4.80,
     "Top Coin": 4.50,
     "Ns Coin": 9.80,
     "New Top": 5.50
@@ -54,9 +54,15 @@ def get_main_keyboard():
         [KeyboardButton(f"🪙 Niva Coin (1000=৳{COIN_RATES_PER_1K['Niva Coin']})"), KeyboardButton(f"🪙 Top Coin (1000=৳{COIN_RATES_PER_1K['Top Coin']})")],
         [KeyboardButton(f"🪙 Ns Coin (1000=৳{COIN_RATES_PER_1K['Ns Coin']})"), KeyboardButton(f"🪙 New Top (1000=৳{COIN_RATES_PER_1K['New Top']})")],
         [KeyboardButton("🔗 রেফারেল লিংক"), KeyboardButton("💳 Withdraw")],
-        [KeyboardButton("💬 Support"), KeyboardButton("🔄 Start / Refresh")]
+        [KeyboardButton("💬 Support")]
     ]
     return ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+
+async def post_init(application: Application):
+    # Set bot commands for Menu button
+    await application.bot.set_my_commands([
+        BotCommand("start", "refresh / start bot")
+    ])
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
@@ -76,10 +82,7 @@ async def handle_coin_selection(update: Update, context: ContextTypes.DEFAULT_TY
     text = update.message.text
     user_id = update.effective_user.id
     
-    if text == "🔄 Start / Refresh":
-        return await start(update, context)
-        
-    elif text == "💬 Support":
+    if text == "💬 Support":
         support_msg = (
             f"📞 **অ্যাডমিন সাপোর্ট / হেল্প ডেস্ক**\n\n"
             f"আপনার যেকোনো সমস্যা, পেমেন্ট সংক্রান্ত প্রশ্ন বা সহায়তার জন্য সরাসরি আমাদের সাথে যোগাযোগ করুন:\n\n"
@@ -151,7 +154,7 @@ async def handle_coin_selection(update: Update, context: ContextTypes.DEFAULT_TY
 async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     
-    if text in ["❌ বাতিল", "🔄 Start / Refresh"]:
+    if text == "❌ বাতিল":
         await update.message.reply_text("❌ প্রসেসটি বাতিল করা হয়েছে।", reply_markup=get_main_keyboard())
         return ConversationHandler.END
         
@@ -163,7 +166,6 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
         coin = context.user_data['coin']
         
-        # Calculation: (amount / 1000) * rate
         rate_per_1k = COIN_RATES_PER_1K[coin]
         total = round((amt / 1000.0) * rate_per_1k, 2)
         
@@ -196,7 +198,7 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def select_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     
-    if text in ["❌ বাতিল", "🔄 Start / Refresh"]:
+    if text == "❌ বাতিল":
         await update.message.reply_text("❌ প্রসেসটি বাতিল করা হয়েছে।", reply_markup=get_main_keyboard())
         return ConversationHandler.END
         
@@ -206,7 +208,7 @@ async def select_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         await update.message.reply_text(
             f"📲 **{text} অ্যাকাউন্ট তথ্য:**\n"
-            f"আপনার {text} নম্বর এবং কয়েন পাঠানোর প্রুফ/ট্রানজেকশন আইডি লিখে পাঠ জানান:",
+            f"আপনার {text} নম্বর এবং কয়েন পাঠানোর প্রুফ/ট্রানজেকশন আইডি লিখে জানান:",
             reply_markup=cancel_keyboard
         )
         return ACCOUNT_NO
@@ -218,7 +220,7 @@ async def save_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global order_counter
     text = update.message.text
     
-    if text in ["❌ বাতিল", "🔄 Start / Refresh"]:
+    if text == "❌ বাতিল":
         await update.message.reply_text("❌ প্রসেসটি বাতিল করা হয়েছে।", reply_markup=get_main_keyboard())
         return ConversationHandler.END
         
@@ -289,7 +291,6 @@ async def handle_admin_action(update: Update, context: ContextTypes.DEFAULT_TYPE
         user_id = int(user_id)
         order_id = int(order_id)
         
-        # Update status in history
         if user_id in user_orders:
             for item in user_orders[user_id]:
                 if item['id'] == order_id:
@@ -311,7 +312,6 @@ async def handle_admin_action(update: Update, context: ContextTypes.DEFAULT_TYPE
         user_id = int(user_id)
         order_id = int(order_id)
         
-        # Update status in history
         if user_id in user_orders:
             for item in user_orders[user_id]:
                 if item['id'] == order_id:
@@ -330,18 +330,18 @@ async def handle_admin_action(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 def main():
     keep_alive()
-    app_bot = Application.builder().token(BOT_TOKEN).build()
+    app_bot = Application.builder().token(BOT_TOKEN).post_init(post_init).build()
     
     conv = ConversationHandler(
-        entry_points=[MessageHandler(filters.Regex(r'^(🪙|🔗|💳|💬|🔄)'), handle_coin_selection)],
+        entry_points=[MessageHandler(filters.Regex(r'^(🪙|🔗|💳|💬)'), handle_coin_selection)],
         states={
             COIN_AMOUNT: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_amount)],
             PAYMENT_METHOD: [MessageHandler(filters.TEXT & ~filters.COMMAND, select_payment)],
             ACCOUNT_NO: [MessageHandler(filters.TEXT & ~filters.COMMAND, save_order)],
         },
         fallbacks=[
-            MessageHandler(filters.Regex('^❌ বাতিল$'), start),
-            MessageHandler(filters.Regex('^🔄 Start / Refresh$'), start)
+            CommandHandler("start", start),
+            MessageHandler(filters.Regex('^❌ বাতিল$'), start)
         ]
     )
 
