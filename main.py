@@ -1,6 +1,5 @@
 import os
-import asyncio
-from thread import Thread
+from threading import Thread
 from flask import Flask
 from openpyxl import Workbook, load_workbook
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
@@ -8,7 +7,7 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Mess
 
 # Configurations
 BOT_TOKEN = "8210193780:AAG3-gzVcqY7PHAHXT56J1HSBEm2ju6xQk0"
-ADMIN_ID = 5899402664  # আপনার টেলিগ্রাম Numeric User ID এখানে দিন
+ADMIN_ID = 5899402664
 EXCEL_FILE = "coin_data.xlsx"
 REFERRAL_PERCENT = 3.0  # ৩% কমিশন
 
@@ -87,9 +86,9 @@ async def set_rate(update: Update, context: ContextTypes.DEFAULT_TYPE):
             COIN_RATES[coin_name] = new_rate
             await update.message.reply_text(f"✅ {coin_name}-এর নতুন দাম সেট করা হয়েছে: {new_rate} ৳")
         else:
-            await update.message.reply_text("❌ সঠিক কয়েনের নাম লিখুন। (Niva/Top/Ns)")
-    except IndexingError:
-        await update.message.reply_text("ফরম্যাট: `/setrate Niva 4.80`", parse_mode='Markdown')
+            await update.message.reply_text("❌ সঠিক কয়েনের নাম লিখুন। (Niva Coin / Top Coin / Ns Coin)")
+    except IndexError:
+        await update.message.reply_text("ফরম্যাট: `/setrate Niva Coin 4.80`", parse_mode='Markdown')
 
 def main():
     keep_alive()
