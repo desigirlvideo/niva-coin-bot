@@ -1,8 +1,6 @@
 import os
-import asyncio
 from threading import Thread
 from flask import Flask
-from openpyxl import Workbook, load_workbook
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application,
@@ -17,7 +15,6 @@ from telegram.ext import (
 # Configurations
 BOT_TOKEN = "8210193780:AAG3-gzVcqY7PHAHXT56J1HSBEm2ju6xQk0"
 ADMIN_ID = 5899402664
-EXCEL_FILE = "coin_data.xlsx"
 REFERRAL_PERCENT = 3.0  # ৩% কমিশন
 
 # Default Coin Rates (BDT per coin)
@@ -27,18 +24,10 @@ COIN_RATES = {
     "Ns Coin": 10.0
 }
 
-# Conversation States for Selling
+# Conversation States
 COIN_CHOICE, COIN_AMOUNT, PAYMENT_METHOD, ACCOUNT_NO = range(4)
 
-# Ensure Excel file exists
-if not os.path.exists(EXCEL_FILE):
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "Orders"
-    ws.append(["User ID", "Username", "Coin", "Amount", "Total BDT", "Payment Method", "Account", "Status"])
-    wb.save(EXCEL_FILE)
-
-# Flask Web Server for Render Uptime
+# Flask Server for Render Uptime
 app = Flask(__name__)
 
 @app.route('/')
@@ -54,7 +43,7 @@ def keep_alive():
     t.daemon = True
     t.start()
 
-# Bot Command Handlers
+# Start & Base Menu
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     args = context.args
@@ -157,23 +146,18 @@ async def save_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     total_bdt = context.user_data.get('total_bdt')
     method = context.user_data.get('payment_method')
 
-    # Save to Excel
-    wb = load_workbook(EXCEL_FILE)
-    ws = wb["Orders"]
-    ws.append([user.id, user.username or "", coin, amount, total_bdt, method, account_info, "Pending"])
-    wb.save(EXCEL_FILE)
-
     await update.message.reply_text("✅ আপনার অর্ডারটি সফলভাবে জমা হয়েছে! অ্যাডমিন যাচাই করে দ্রুত পেমেন্ট পাঠিয়ে দেবে।")
     
-    # Notify Admin
+    # Send Direct Notification to Admin
     admin_msg = (
         f"📥 **নতুন সেল অর্ডার!**\n\n"
         f"• User ID: `{user.id}`\n"
+        f"• Username: @{user.username if user.username else 'N/A'}\n"
         f"• Coin: {coin}\n"
         f"• Amount: {amount}\n"
         f"• Total: {total_bdt} BDT\n"
         f"• Method: {method}\n"
-        f"• Info: {account_info}"
+        f"• Account Info: {account_info}"
     )
     try:
         await context.bot.send_message(chat_id=ADMIN_ID, text=admin_msg, parse_mode='Markdown')
@@ -186,7 +170,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("প্রক্রিয়াটি বাতিল করা হয়েছে।")
     return ConversationHandler.END
 
-# Admin Set Rate Command
+# Admin Command
 async def set_rate(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
         return
