@@ -19,6 +19,12 @@ ADMIN_ID = 5899402664
 LOG_CHANNEL_ID = -1003948006284
 SUPPORT_USERNAME = "ziaulx"
 
+# Disabled Coins Config (বন্ধ রাখতে চাইলে মেসেজ দিন, চালু রাখতে খালি রাখতে পারেন)
+DISABLED_COINS = {
+    "New Top": "⚠️ **আন্তরিকভাবে দুঃখিত!**\nNew Top সেল সাময়িকভাবে বন্ধ আছে। দয়া করে কিছুক্ষণ পর চেষ্টা করুন।",
+    "Ns Coin": "⚠️ **আন্তরিকভাবে দুঃখিত!**\nNs Coin এর স্টক ফুল হয়ে গেছে। খুব শীঘ্রই আবার চালু করা হবে।"
+}
+
 # Coin rates per 1000 (1K) coins
 COIN_RATES_PER_1K = {
     "Niva Coin": 4.80,
@@ -69,11 +75,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_text = (
         f"🙋‍♂️ **স্বাগতম {user.first_name}!**\n\n"
         f"কেন কাজ করবেন এই বটে?\n"
-        f"✅ সবচেয়ে বেশি রেট\n"
+        f"✅ সবচেয়ে বেশি রেট\n"
         f"✅ দ্রুত পেমেন্ট\n"
         f"✅ বাংলাদেশি পেমেন্ট মেথড (bKash/Nagad)\n"
         f"⚠️ **সর্বনিম্ন উইথড্র limit: ৳২০**\n\n"
-        f"👇 **নিচের তালিকা থেকে আপনার কয়েন সিলেক্ট করুন:**"
+        f"👇 **নিচের তালিকা থেকে আপনার কয়েন সিলেক্ট করুন:**"
     )
     await update.message.reply_text(welcome_text, reply_markup=get_main_keyboard(), parse_mode='Markdown')
     return ConversationHandler.END
@@ -85,7 +91,7 @@ async def handle_coin_selection(update: Update, context: ContextTypes.DEFAULT_TY
     if text == "💬 Support":
         support_msg = (
             f"📞 **অ্যাডমিন সাপোর্ট / হেল্প ডেস্ক**\n\n"
-            f"আপনার যেকোনো সমস্যা, পেমেন্ট সংক্রান্ত প্রশ্ন বা সহায়তার জন্য সরাসরি আমাদের সাথে যোগাযোগ করুন:\n\n"
+            f"আপনার যেকোনো সমস্যা, পেমেন্ট সংক্রান্ত প্রশ্ন বা সহায়তার জন্য সরাসরি আমাদের সাথে যোগাযোগ করুন:\n\n"
             f"👤 **অ্যাডমিন:** @{SUPPORT_USERNAME}\n"
             f"⏱️ **সাপোর্ট টাইম:** ২৪/৭ সার্ভিস"
         )
@@ -109,7 +115,7 @@ async def handle_coin_selection(update: Update, context: ContextTypes.DEFAULT_TY
                     
                 msg += (
                     f"**অর্ডার #{ord_data['id']}**\n"
-                    f"• কয়েন: {ord_data['coin']}\n"
+                    f"• কয়েন: {ord_data['coin']}\n"
                     f"• পরিমাণ: {ord_data['amount']} টি\n"
                     f"• মোট টাকা: ৳{ord_data['total']}\n"
                     f"• মেথড: {ord_data['method']}\n"
@@ -124,7 +130,7 @@ async def handle_coin_selection(update: Update, context: ContextTypes.DEFAULT_TY
         ref_msg = (
             f"🔗 **আপনার রেফারেল লিংক:**\n"
             f"https://t.me/{bot_user}?start={user_id}\n\n"
-            f"আপনার লিংকে নতুন ইউজার যোগ দিলে পাবেন আকর্ষণীয় কমিশন!"
+            f"আপনার লিংকে নতুন ইউজার যোগ দিলে পাবেন আকর্ষণীয় কমিশন!"
         )
         await update.message.reply_text(ref_msg, reply_markup=get_main_keyboard(), parse_mode='Markdown')
         return ConversationHandler.END
@@ -136,26 +142,36 @@ async def handle_coin_selection(update: Update, context: ContextTypes.DEFAULT_TY
             break
             
     if selected_coin:
+        # 🔻 কয়েন বন্ধ থাকলে এই অংশটি আটকাবে 🔻
+        if selected_coin in DISABLED_COINS:
+            await update.message.reply_text(
+                DISABLED_COINS[selected_coin],
+                reply_markup=get_main_keyboard(),
+                parse_mode='Markdown'
+            )
+            return ConversationHandler.END
+        # 🔺 ---------------------------------- 🔺
+
         context.user_data['coin'] = selected_coin
         cancel_keyboard = ReplyKeyboardMarkup([[KeyboardButton("❌ বাতিল")]], resize_keyboard=True)
         
         await update.message.reply_text(
             f"আপনি **{selected_coin}** সিলেক্ট করেছেন।\n"
-            f"প্রতি ১০০০ (1K) কয়েন রেট: **৳{COIN_RATES_PER_1K[selected_coin]}**\n\n"
-            f"📥 **কত কয়েন বিক্রি করতে চান তা সংখ্যায় লিখুন (যেমন: 4000):**",
+            f"প্রতি ১০০০ (1K) কয়েন রেট: **৳{COIN_RATES_PER_1K[selected_coin]}**\n\n"
+            f"📥 **কত কয়েন বিক্রি করতে চান তা সংখ্যায় লিখুন (যেমন: 4000):**",
             reply_markup=cancel_keyboard,
             parse_mode='Markdown'
         )
         return COIN_AMOUNT
     else:
-        await update.message.reply_text("দয়া করে নিচের মেনু থেকে যেকোনো একটি অপশন বেছে নিন।", reply_markup=get_main_keyboard())
+        await update.message.reply_text("দয়া করে নিচের মেনু থেকে যেকোনো একটি অপশন বেছে নিন।", reply_markup=get_main_keyboard())
         return ConversationHandler.END
 
 async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     
     if text == "❌ বাতিল":
-        await update.message.reply_text("❌ প্রসেসটি বাতিল করা হয়েছে।", reply_markup=get_main_keyboard())
+        await update.message.reply_text("❌ প্রসেসটি বাতিল করা হয়েছে।", reply_markup=get_main_keyboard())
         return ConversationHandler.END
         
     try:
@@ -183,7 +199,7 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         await update.message.reply_text(
             f"📊 **অর্ডার সারসংক্ষেপ:**\n"
-            f"• কয়েন: {coin}\n"
+            f"• কয়েন: {coin}\n"
             f"• পরিমাণ: {amt} টি\n"
             f"• মোট পাবেন: **৳{total}**{warning}\n\n"
             f"👇 **আপনার পেমেন্ট মেথড সিলেক্ট করুন:**",
@@ -192,14 +208,14 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return PAYMENT_METHOD
     except ValueError:
-        await update.message.reply_text("⚠️ ভুল ইনপুট! দয়া করে শুধু সংখ্যা লিখুন (যেমন: 4000):")
+        await update.message.reply_text("⚠️ ভুল ইনপুট! দয়া করে শুধু সংখ্যা লিখুন (যেমন: 4000):")
         return COIN_AMOUNT
 
 async def select_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     
     if text == "❌ বাতিল":
-        await update.message.reply_text("❌ প্রসেসটি বাতিল করা হয়েছে।", reply_markup=get_main_keyboard())
+        await update.message.reply_text("❌ প্রসেসটি বাতিল করা হয়েছে।", reply_markup=get_main_keyboard())
         return ConversationHandler.END
         
     if text in ["bKash", "Nagad"]:
@@ -208,12 +224,12 @@ async def select_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         await update.message.reply_text(
             f"📲 **{text} অ্যাকাউন্ট তথ্য:**\n"
-            f"আপনার {text} নম্বর এবং কয়েন পাঠানোর প্রুফ/ট্রানজেকশন আইডি লিখে জানান:",
+            f"আপনার {text} নম্বর এবং কয়েন পাঠানোর প্রুফ/ট্রানজেকশন আইডি লিখে জানান:",
             reply_markup=cancel_keyboard
         )
         return ACCOUNT_NO
     else:
-        await update.message.reply_text("দয়া করে bKash অথবা Nagad সিলেক্ট করুন:")
+        await update.message.reply_text("দয়া করে bKash অথবা Nagad সিলেক্ট করুন:")
         return PAYMENT_METHOD
 
 async def save_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -221,7 +237,7 @@ async def save_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     
     if text == "❌ বাতিল":
-        await update.message.reply_text("❌ প্রসেসটি বাতিল করা হয়েছে।", reply_markup=get_main_keyboard())
+        await update.message.reply_text("❌ প্রসেসটি বাতিল করা হয়েছে।", reply_markup=get_main_keyboard())
         return ConversationHandler.END
         
     u = update.effective_user
@@ -248,9 +264,9 @@ async def save_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_orders[u.id].append(order_item)
 
     await update.message.reply_text(
-        f"✅ **আপনার অর্ডারটি সফলভাবে জমা হয়েছে! (Order #{order_id})**\n"
+        f"✅ **আপনার অর্ডারটি সফলভাবে জমা হয়েছে! (Order #{order_id})**\n"
         f"স্ট্যাটাস: **⏳ Pending**\n"
-        f"আপনি **💳 Withdraw** অপশনে ক্লিক করে যেকোনো সময় অর্ডারের বিবরণ ও স্ট্যাটাস দেখতে পারবেন।",
+        f"আপনি **💳 Withdraw** অপশনে ক্লিক করে যেকোনো সময় অর্ডারের বিবরণ ও স্ট্যাটাস দেখতে পারবেন।",
         reply_markup=get_main_keyboard(),
         parse_mode='Markdown'
     )
@@ -258,7 +274,7 @@ async def save_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     admin_msg = (
         f"📥 **নতুন সেল অর্ডার! (#Order_{order_id})**\n\n"
         f"👤 ইউজার: [{u.first_name}](tg://user?id={u.id}) (`{u.id}`)\n"
-        f"🪙 কয়েন: **{c}**\n"
+        f"🪙 কয়েন: **{c}**\n"
         f"🔢 পরিমাণ: **{amt}**\n"
         f"💰 মোট টাকা: **৳{tot}**\n"
         f"💳 মেথড: **{m}**\n"
@@ -302,7 +318,7 @@ async def handle_admin_action(update: Update, context: ContextTypes.DEFAULT_TYPE
         try:
             await context.bot.send_message(
                 chat_id=user_id,
-                text=f"🎉 **আপনার Order #{order_id} সফলভাবে অনুমোদিত হয়েছে!**\nআপনার অ্যাকাউন্টে ৳{amount} পেমেন্ট করে দেওয়া হয়েছে।"
+                text=f"🎉 **আপনার Order #{order_id} সফলভাবে অনুমোদিত হয়েছে!**\nআপনার অ্যাকাউন্টে ৳{amount} পেমেন্ট করে দেওয়া হয়েছে।"
             )
         except Exception:
             pass
@@ -323,7 +339,7 @@ async def handle_admin_action(update: Update, context: ContextTypes.DEFAULT_TYPE
         try:
             await context.bot.send_message(
                 chat_id=user_id,
-                text=f"❌ **আপনার Order #{order_id} বাতিল করা হয়েছে।**\nসঠিক তথ্য প্রদান করে আবার চেষ্টা করুন।"
+                text=f"❌ **আপনার Order #{order_id} বাতিল করা হয়েছে।**\nসঠিক তথ্য প্রদান করে আবার চেষ্টা করুন।"
             )
         except Exception:
             pass
