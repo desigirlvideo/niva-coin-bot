@@ -1,14 +1,12 @@
 import os
 from threading import Thread
 from flask import Flask
-from openpyxl import Workbook, load_workbook
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
 # Configurations
 BOT_TOKEN = "8210193780:AAG3-gzVcqY7PHAHXT56J1HSBEm2ju6xQk0"
 ADMIN_ID = 5899402664
-EXCEL_FILE = "coin_data.xlsx"
 REFERRAL_PERCENT = 3.0  # ৩% কমিশন
 
 # Default Coin Rates (BDT per coin)
@@ -18,20 +16,12 @@ COIN_RATES = {
     "Ns Coin": 10.0
 }
 
-# Ensure Excel file exists
-if not os.path.exists(EXCEL_FILE):
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "Orders"
-    ws.append(["User ID", "Username", "Coin", "Amount", "Total BDT", "Payment Method", "Account", "Status"])
-    wb.save(EXCEL_FILE)
-
 # Flask Server for Keep-Alive
 app = Flask('')
 
 @app.route('/')
 def home():
-    return "Niva Coin Bot is Online!"
+    return "Niva Coin Bot is Live and Running!"
 
 def run_flask():
     app.run(host='0.0.0.0', port=8080)
@@ -53,7 +43,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     keyboard = [
         [InlineKeyboardButton("💰 Today's Rates", callback_data='rates')],
-        [InlineKeyboardButton("📤 Sell Coin", callback_data='sell')],
         [InlineKeyboardButton("🔗 Referral Link", callback_data='ref')],
         [InlineKeyboardButton("🛡️ Payment Proof", url='https://t.me/your_proof_channel')]
     ]
