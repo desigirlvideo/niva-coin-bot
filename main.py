@@ -20,7 +20,7 @@ LOG_CHANNEL_ID = -1003948006284
 
 # Coin rates per 1000 (1K) coins
 COIN_RATES_PER_1K = {
-    "Niva Coin": 4.20,
+    "Niva Coin": 5.00,
     "Top Coin": 4.50,
     "Ns Coin": 9.20,
     "New Top": 5.50
