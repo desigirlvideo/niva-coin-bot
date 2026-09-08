@@ -18,8 +18,8 @@ BOT_TOKEN = "8210193780:AAG3-gzVcqY7PHAHXT56J1HSBEm2ju6xQk0"
 ADMIN_ID = 5899402664
 LOG_CHANNEL_ID = -1003948006284
 
-# Coin rates
-COIN_RATES = {
+# Coin rates per 1000 (1K) coins
+COIN_RATES_PER_1K = {
     "Niva Coin": 4.20,
     "Top Coin": 4.50,
     "Ns Coin": 9.20,
@@ -46,8 +46,8 @@ def keep_alive():
 
 def get_main_keyboard():
     keyboard = [
-        [KeyboardButton(f"🪙 Niva Coin (৳{COIN_RATES['Niva Coin']})"), KeyboardButton(f"🪙 Top Coin (৳{COIN_RATES['Top Coin']})")],
-        [KeyboardButton(f"🪙 Ns Coin (৳{COIN_RATES['Ns Coin']})"), KeyboardButton(f"🪙 New Top (৳{COIN_RATES['New Top']})")],
+        [KeyboardButton(f"🪙 Niva Coin (1000=৳{COIN_RATES_PER_1K['Niva Coin']})"), KeyboardButton(f"🪙 Top Coin (1000=৳{COIN_RATES_PER_1K['Top Coin']})")],
+        [KeyboardButton(f"🪙 Ns Coin (1000=৳{COIN_RATES_PER_1K['Ns Coin']})"), KeyboardButton(f"🪙 New Top (1000=৳{COIN_RATES_PER_1K['New Top']})")],
         [KeyboardButton("🔗 রেফারেল লিংক"), KeyboardButton("🛡️ পেমেন্ট প্রুফ")]
     ]
     return ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
@@ -69,7 +69,7 @@ async def handle_coin_selection(update: Update, context: ContextTypes.DEFAULT_TY
     text = update.message.text
     
     selected_coin = None
-    for coin in COIN_RATES:
+    for coin in COIN_RATES_PER_1K:
         if coin in text:
             selected_coin = coin
             break
@@ -80,8 +80,8 @@ async def handle_coin_selection(update: Update, context: ContextTypes.DEFAULT_TY
         
         await update.message.reply_text(
             f"আপনি **{selected_coin}** সিলেক্ট করেছেন।\n"
-            f"প্রতি কয়েন রেট: **৳{COIN_RATES[selected_coin]}**\n\n"
-            f"📥 **কত কয়েন বিক্রি করতে চান তা সংখ্যায় লিখুন:**",
+            f"প্রতি ১০০০ (1K) কয়েন রেট: **৳{COIN_RATES_PER_1K[selected_coin]}**\n\n"
+            f"📥 **কত কয়েন বিক্রি করতে চান তা সংখ্যায় লিখুন (যেমন: 1000):**",
             reply_markup=cancel_keyboard,
             parse_mode='Markdown'
         )
@@ -119,7 +119,11 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return COIN_AMOUNT
             
         coin = context.user_data['coin']
-        total = round(amt * COIN_RATES[coin], 2)
+        
+        # All coins formula: (amount / 1000) * rate
+        rate_per_1k = COIN_RATES_PER_1K[coin]
+        total = round((amt / 1000.0) * rate_per_1k, 2)
+        
         context.user_data['amt'] = amt
         context.user_data['total'] = total
         
@@ -131,7 +135,7 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             f"📊 **অর্ডার সারসংক্ষেপ:**\n"
             f"• কয়েন: {coin}\n"
-            f"• পরিমাণ: {amt}\n"
+            f"• পরিমাণ: {amt} টি\n"
             f"• মোট পাবেন: **৳{total}**\n\n"
             f"👇 **আপনার পেমেন্ট মেথড সিলেক্ট করুন:**",
             reply_markup=payment_keyboard,
@@ -139,7 +143,7 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return PAYMENT_METHOD
     except ValueError:
-        await update.message.reply_text("⚠️ ভুল ইনপুট! দয়া করে শুধু সংখ্যা লিখুন (যেমন: 100):")
+        await update.message.reply_text("⚠️ ভুল ইনপুট! দয়া করে শুধু সংখ্যা লিখুন (যেমন: 1000):")
         return COIN_AMOUNT
 
 async def select_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
