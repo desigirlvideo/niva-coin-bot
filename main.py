@@ -2,11 +2,12 @@ import os
 import asyncio
 from flask import Flask
 from threading import Thread
-from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
+from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application,
     CommandHandler,
     MessageHandler,
+    CallbackQueryHandler,
     ConversationHandler,
     filters,
     ContextTypes
@@ -15,6 +16,7 @@ from telegram.ext import (
 # Configurations
 BOT_TOKEN = "8210193780:AAG3-gzVcqY7PHAHXT56J1HSBEm2ju6xQk0"
 ADMIN_ID = 5899402664
+LOG_CHANNEL_ID = -1003948006284
 
 # Coin rates
 COIN_RATES = {
@@ -26,7 +28,7 @@ COIN_RATES = {
 
 COIN_AMOUNT, PAYMENT_METHOD, ACCOUNT_NO = range(3)
 
-# Web server setup for Render keep-alive
+# Web server setup
 app = Flask('')
 
 @app.route('/')
@@ -42,7 +44,6 @@ def keep_alive():
     t.daemon = True
     t.start()
 
-# Main menu Keyboard Generator
 def get_main_keyboard():
     keyboard = [
         [KeyboardButton(f"🪙 Niva Coin (৳{COIN_RATES['Niva Coin']})"), KeyboardButton(f"🪙 Top Coin (৳{COIN_RATES['Top Coin']})")],
@@ -51,7 +52,6 @@ def get_main_keyboard():
     ]
     return ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
-# Start Command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     welcome_text = (
@@ -65,11 +65,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(welcome_text, reply_markup=get_main_keyboard(), parse_mode='Markdown')
     return ConversationHandler.END
 
-# Handling Coin Selection
 async def handle_coin_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     
-    # Identify which coin was selected
     selected_coin = None
     for coin in COIN_RATES:
         if coin in text:
@@ -100,14 +98,13 @@ async def handle_coin_selection(update: Update, context: ContextTypes.DEFAULT_TY
         return ConversationHandler.END
         
     elif text == "🛡️ পেমেন্ট প্রুফ":
-        await update.message.reply_text("🛡️ পেমেন্ট প্রুফ দেখতে আমাদের টেলিগ্রাম চ্যানেলে যুক্ত থাকুন:\nhttps://t.me/your_proof_channel", reply_markup=get_main_keyboard())
+        await update.message.reply_text("🛡️ পেমেন্ট প্রুফ দেখতে আমাদের চ্যানেলে যুক্ত থাকুন:\nhttps://t.me/your_proof_channel", reply_markup=get_main_keyboard())
         return ConversationHandler.END
         
     else:
         await update.message.reply_text("দয়া করে নিচের মেনু থেকে যেকোনো একটি অপশন বেছে নিন।", reply_markup=get_main_keyboard())
         return ConversationHandler.END
 
-# Get Amount from User
 async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     
@@ -145,7 +142,6 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("⚠️ ভুল ইনপুট! দয়া করে শুধু সংখ্যা লিখুন (যেমন: 100):")
         return COIN_AMOUNT
 
-# Select Payment Method
 async def select_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     
@@ -167,7 +163,6 @@ async def select_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("দয়া করে bKash অথবা Nagad সিলেক্ট করুন:")
         return PAYMENT_METHOD
 
-# Save Order & Notify Admin
 async def save_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     
@@ -189,7 +184,6 @@ async def save_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode='Markdown'
     )
     
-    # Notify Admin
     admin_msg = (
         f"📥 **নতুন সেল অর্ডার!**\n\n"
         f"👤 ইউজার: [{u.first_name}](tg://user?id={u.id}) (`{u.id}`)\n"
@@ -199,28 +193,53 @@ async def save_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"💳 মেথড: **{m}**\n"
         f"📝 ডিটেইলস: `{info}`"
     )
+    
+    admin_buttons = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("✅ Approve", callback_data=f"app_{u.id}_{tot}"),
+            InlineKeyboardButton("❌ Reject", callback_data=f"rej_{u.id}")
+        ]
+    ])
+
     try:
-        await context.bot.send_message(chat_id=ADMIN_ID, text=admin_msg, parse_mode='Markdown')
+        await context.bot.send_message(chat_id=LOG_CHANNEL_ID, text=admin_msg, reply_markup=admin_buttons, parse_mode='Markdown')
     except Exception as e:
-        print(f"Error sending msg to admin: {e}")
+        print(f"Error sending log: {e}")
         
     return ConversationHandler.END
 
-# Admin Set Rate Command
-async def set_rate(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != ADMIN_ID:
-        return
-    try:
-        c_name = " ".join(context.args[:-1])
-        val = float(context.args[-1])
-        for k in COIN_RATES:
-            if k.lower() == c_name.lower():
-                COIN_RATES[k] = val
-                await update.message.reply_text(f"✅ {k}-এর রেট পরিবর্তন করে ৳{val} করা হয়েছে।", reply_markup=get_main_keyboard())
-                return
-        await update.message.reply_text("❌ কয়েনের নাম সঠিক নয়। (Niva Coin, Top Coin, Ns Coin, New Top)")
-    except Exception:
-        await update.message.reply_text("ফরম্যাট: `/setrate Niva Coin 4.80`", parse_mode='Markdown')
+async def handle_admin_action(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    
+    data = query.data
+    admin_user = query.from_user.first_name
+    
+    if data.startswith("app_"):
+        _, user_id, amount = data.split("_")
+        new_text = query.message.text + f"\n\n✅ **অনুমোদিত হয়েছে** (By {admin_user})"
+        await query.edit_message_text(text=new_text)
+        
+        try:
+            await context.bot.send_message(
+                chat_id=int(user_id),
+                text=f"🎉 **আপনার অর্ডারটি সফলভাবে অনুমোদিত হয়েছে!**\nআপনার অ্যাকাউন্টে ৳{amount} পেমেন্ট করা হয়েছে।"
+            )
+        except Exception:
+            pass
+            
+    elif data.startswith("rej_"):
+        _, user_id = data.split("_")
+        new_text = query.message.text + f"\n\n❌ **বাতিল করা হয়েছে** (By {admin_user})"
+        await query.edit_message_text(text=new_text)
+        
+        try:
+            await context.bot.send_message(
+                chat_id=int(user_id),
+                text="❌ **আপনার অর্ডারটি বাতিল করা হয়েছে।**\nসঠিক তথ্য প্রদান করে আবার চেষ্টা করুন অথবা অ্যাডমিনের সাথে যোগাযোগ করুন।"
+            )
+        except Exception:
+            pass
 
 def main():
     keep_alive()
@@ -237,8 +256,8 @@ def main():
     )
 
     app_bot.add_handler(CommandHandler("start", start))
-    app_bot.add_handler(CommandHandler("setrate", set_rate))
     app_bot.add_handler(conv)
+    app_bot.add_handler(CallbackQueryHandler(handle_admin_action, pattern=r'^(app_|rej_)'))
     app_bot.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_coin_selection))
     
     app_bot.run_polling()
