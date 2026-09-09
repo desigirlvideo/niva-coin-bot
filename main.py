@@ -22,13 +22,13 @@ COIN_TRANSFER_USERNAME = "@ziaulx90"
 
 # Disabled Coins Config
 DISABLED_COINS = {
-    "New Top": "⚠️ <b>আন্তরিকভাবে দুঃখিত!</b>\nNew Top সেল সাময়িকভাবে বন্ধ আছে। দয়া করে কিছুক্ষণ পর চেষ্টা করুন।",
+    "Niva Coin": "⚠️ <b>আন্তরিকভাবে দুঃখিত!</b>\nNiva Coin সেল সাময়িকভাবে বন্ধ আছে। দয়া করে কিছুক্ষণ পর চেষ্টা করুন।",
     "Ns Coin": "⚠️ <b>আন্তরিকভাবে দুঃখিত!</b>\nNs Coin এর স্টক ফুল হয়ে গেছে। খুব শীঘ্রই আবার চালু করা হবে।"
 }
 
 # Coin rates per 1000 (1K) coins
 COIN_RATES_PER_1K = {
-    "Niva Coin": 4.70,
+    "Niva Coin": 4.80,
     "Top Coin": 4.50,
     "Ns Coin": 9.80,
     "New Top": 5.50
@@ -79,7 +79,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"✅ সবচেয়ে বেশি রেট\n"
         f"✅ দ্রুত পেমেন্ট\n"
         f"✅ বাংলাদেশি পেমেন্ট মেথড (bKash/Nagad)\n"
-        f"✅ 9 Tarik Niva & Top coin\n"
         f"⚠️ <b>সর্বনিম্ন উইথড্র limit: ৳২০</b>\n\n"
         f"👇 <b>নিচের তালিকা থেকে আপনার কয়েন সিলেক্ট করুন:</b>"
     )
@@ -195,12 +194,20 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         cancel_keyboard = ReplyKeyboardMarkup([[KeyboardButton("❌ বাতিল")]], resize_keyboard=True)
         
-        username_prompt = (
-            f"📤 <b>কয়েন ট্রান্সফার করার জন্য নিচের আইডিতে সেন্ড করুন:</b>\n\n"
-            f"👤 <b>Target Username / ID:</b> <code>{COIN_TRANSFER_USERNAME}</code>\n\n"
-            f"🔗 ওপরের ইউজারনেমটি কপি করে কয়েন সেন্ড করুন এবং আপনার অ্যাকাউন্ট/ইউজারনেমটি এখানে লিখে পাঠান:"
-        )
-        await update.message.reply_text(username_prompt, reply_markup=cancel_keyboard, parse_mode='HTML')
+        if coin == "Top Coin":
+            prompt_msg = (
+                f"🎟️ <b>আপনার Top Coin কুপন কোডটি পাঠাও:</b>\n\n"
+                f"যেমন: <code>UBX3-GM3D-WLZQ</code>\n\n"
+                f"📥 আপনার কুপন কোডটি তৈরি করে এখানে লিখে বা পেস্ট করে দিন:"
+            )
+        else:
+            prompt_msg = (
+                f"📤 <b>কয়েন ট্রান্সফার করার জন্য নিচের আইডিতে সেন্ড করুন:</b>\n\n"
+                f"👤 <b>Target Username / ID:</b> <code>{COIN_TRANSFER_USERNAME}</code>\n\n"
+                f"🔗 ওপরের ইউজারনেমটি কপি করে কয়েন সেন্ড করুন এবং আপনার অ্যাকাউন্ট/ইউজারনেমটি এখানে লিখে পাঠান:"
+            )
+
+        await update.message.reply_text(prompt_msg, reply_markup=cancel_keyboard, parse_mode='HTML')
         return NIVA_USERNAME
         
     except ValueError:
@@ -306,13 +313,15 @@ async def save_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode='HTML'
     )
     
+    label_text = "🎟️ কুপন কোড:" if c == "Top Coin" else "📤 সেন্ডারের অ্যাকাউন্ট/আইডি:"
+    
     admin_msg = (
         f"📥 <b>নতুন সেল অর্ডার! (#Order_{order_id})</b>\n\n"
         f"👤 ইউজার: {u.first_name} (<code>{u.id}</code>)\n"
         f"🪙 কয়েন: <b>{c}</b>\n"
         f"🔢 পরিমাণ: <b>{amt}</b>\n"
         f"💰 মোট টাকা: <b>৳{tot}</b>\n"
-        f"📤 সেন্ডারের অ্যাকাউন্ট/আইডি: <code>{sender_acc}</code>\n"
+        f"{label_text} <code>{sender_acc}</code>\n"
         f"💳 মেথড: <b>{m}</b>\n"
         f"📝 পেমেন্ট নম্বর/ডিটেইলস: <code>{info}</code>"
     )
