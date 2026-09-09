@@ -14,9 +14,9 @@ from telegram.ext import (
 )
 
 # Configurations
-BOT_TOKEN = "8210193780:AAHgexSciAcNOhUnJkOhVxdj4Y5Mi576g-c"
+BOT_TOKEN = "8210193780:AAEFsXKLmDPpU50uIeUy6xZaLcrnRCcKvFk"
 ADMIN_ID = 5899402664
-LOG_CHANNEL_ID = "-1004483673752"  # String format for absolute safety
+LOG_CHANNEL_ID = "-1004483673752"
 SUPPORT_USERNAME = "ziaulx"
 COIN_TRANSFER_USERNAME = "@ziaulx90"
 
