@@ -22,13 +22,13 @@ COIN_TRANSFER_USERNAME = "@ziaulx90"
 
 # Disabled Coins Config
 DISABLED_COINS = {
-    "Niva Coin": "⚠️ <b>আন্তরিকভাবে দুঃখিত!</b>\nNiva Coin সেল সাময়িকভাবে বন্ধ আছে। দয়া করে কিছুক্ষণ পর চেষ্টা করুন।",
+    "New Top": "⚠️ <b>আন্তরিকভাবে দুঃখিত!</b>\nNew Top সেল সাময়িকভাবে বন্ধ আছে। দয়া করে কিছুক্ষণ পর চেষ্টা করুন।",
     "Ns Coin": "⚠️ <b>আন্তরিকভাবে দুঃখিত!</b>\nNs Coin এর স্টক ফুল হয়ে গেছে। খুব শীঘ্রই আবার চালু করা হবে।"
 }
 
 # Coin rates per 1000 (1K) coins
 COIN_RATES_PER_1K = {
-    "Niva Coin": 4.80,
+    "Niva Coin": 4.70,
     "Top Coin": 4.50,
     "Ns Coin": 9.80,
     "New Top": 5.50
