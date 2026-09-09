@@ -1,5 +1,7 @@
 import os
 import asyncio
+from datetime import datetime
+import pytz
 from flask import Flask
 from threading import Thread
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup, BotCommand
@@ -73,8 +75,15 @@ async def post_init(application: Application):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
+    
+    # Bangladesh Date Format Setup
+    tz = pytz.timezone('Asia/Dhaka')
+    today_date = datetime.now(tz).strftime("%d %B, %Y")
+    
     welcome_text = (
         f"🙋‍♂️ <b>স্বাগতম {user.first_name}!</b>\n\n"
+        f"📅 <b>আজকের তারিখ: {today_date}</b>\n"
+        f"🔥 <b>আজকের সেরা রেটে সেল করুন আপনার কয়েন!</b>\n\n"
         f"কেন কাজ করবেন এই বটে?\n"
         f"✅ সবচেয়ে বেশি রেট\n"
         f"✅ দ্রুত পেমেন্ট\n"
