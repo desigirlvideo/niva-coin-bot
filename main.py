@@ -16,7 +16,7 @@ from telegram.ext import (
 # Configurations
 BOT_TOKEN = "8210193780:AAHgexSciAcNOhUnJkOhVxdj4Y5Mi576g-c"
 ADMIN_ID = 5899402664
-LOG_CHANNEL_ID = -1004483673752  # আপনার ১৩ সংখ্যার সঠিক Channel ID-টি এখানে চেক করে বসিয়ে নিন
+LOG_CHANNEL_ID = "-1004483673752"  # String format for absolute safety
 SUPPORT_USERNAME = "ziaulx"
 COIN_TRANSFER_USERNAME = "@ziaulx90"
 
@@ -324,7 +324,12 @@ async def save_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ])
 
     try:
-        await context.bot.send_message(chat_id=LOG_CHANNEL_ID, text=admin_msg, reply_markup=admin_buttons, parse_mode='Markdown')
+        await context.bot.send_message(
+            chat_id=int(LOG_CHANNEL_ID),
+            text=admin_msg,
+            reply_markup=admin_buttons,
+            parse_mode='Markdown'
+        )
     except Exception as e:
         print(f"Error sending log: {e}")
         
