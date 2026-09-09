@@ -15,7 +15,8 @@ from telegram.ext import (
 
 # Configurations
 BOT_TOKEN = "8210193780:AAG3-gzVcqY7PHAHXT56J1HSBEm2ju6xQk0"
-ADMIN_ID = 5899402664  # আপনার পার্সোনাল আইডি (এখানে সরাসরি মেসেজ যাবে)
+ADMIN_ID = 5899402664
+LOG_CHANNEL_ID = -1004483673752  # আপনার নতুন চ্যানেল ID সঠিক ফরম্যাটে আপডেট করা হয়েছে
 SUPPORT_USERNAME = "ziaulx"
 COIN_TRANSFER_USERNAME = "@ziaulx90"
 
@@ -311,8 +312,7 @@ async def save_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ])
 
     try:
-        # সরাসরি আপনার টেলিগ্রাম আইডিতে অর্ডার রিকোয়েস্ট পাঠানো হচ্ছে
-        await context.bot.send_message(chat_id=ADMIN_ID, text=admin_msg, reply_markup=admin_buttons, parse_mode='Markdown')
+        await context.bot.send_message(chat_id=LOG_CHANNEL_ID, text=admin_msg, reply_markup=admin_buttons, parse_mode='Markdown')
     except Exception as e:
         print(f"Error sending log: {e}")
         
