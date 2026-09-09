@@ -14,9 +14,9 @@ from telegram.ext import (
 )
 
 # Configurations
-BOT_TOKEN = "8210193780:AAEvVqDvfNXvQ5lEAfo64DLOnvFNN59ima8"
+BOT_TOKEN = "8210193780:AAHgexSciAcNOhUnJkOhVxdj4Y5Mi576g-c"
 ADMIN_ID = 5899402664
-LOG_CHANNEL_ID = -1004483673752
+LOG_CHANNEL_ID = -1004483673752  # আপনার ১৩ সংখ্যার সঠিক Channel ID-টি এখানে চেক করে বসিয়ে নিন
 SUPPORT_USERNAME = "ziaulx"
 COIN_TRANSFER_USERNAME = "@ziaulx90"
 
