@@ -1,7 +1,6 @@
 import os
 import asyncio
-from datetime import datetime
-import pytz
+from datetime import datetime, timezone, timedelta
 from flask import Flask
 from threading import Thread
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup, BotCommand
@@ -76,9 +75,9 @@ async def post_init(application: Application):
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     
-    # Bangladesh Date Format Setup
-    tz = pytz.timezone('Asia/Dhaka')
-    today_date = datetime.now(tz).strftime("%d %B, %Y")
+    # Bangladesh Timezone Setup (UTC+6) without external library
+    bd_tz = timezone(timedelta(hours=6))
+    today_date = datetime.now(bd_tz).strftime("%d %B, %Y")
     
     welcome_text = (
         f"🙋‍♂️ <b>স্বাগতম {user.first_name}!</b>\n\n"
