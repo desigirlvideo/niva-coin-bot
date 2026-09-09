@@ -14,9 +14,9 @@ from telegram.ext import (
 )
 
 # Configurations
-BOT_TOKEN = "8210193780:AAG3-gzVcqY7PHAHXT56J1HSBEm2ju6xQk0"
+BOT_TOKEN = "8210193780:AAEvVqDvfNXvQ5lEAfo64DLOnvFNN59ima8"
 ADMIN_ID = 5899402664
-LOG_CHANNEL_ID = -1004483673752  # আপনার নতুন চ্যানেল ID সঠিক ফরম্যাটে আপডেট করা হয়েছে
+LOG_CHANNEL_ID = -1004483673752
 SUPPORT_USERNAME = "ziaulx"
 COIN_TRANSFER_USERNAME = "@ziaulx90"
 
@@ -82,10 +82,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"⚠️ **সর্বনিম্ন উইথড্র limit: ৳২০**\n\n"
         f"👇 **নিচের তালিকা থেকে আপনার কয়েন সিলেক্ট করুন:**"
     )
-    await update.message.reply_text(welcome_text, reply_markup=get_main_keyboard(), parse_mode='Markdown')
+    if update.message:
+        await update.message.reply_text(welcome_text, reply_markup=get_main_keyboard(), parse_mode='Markdown')
     return ConversationHandler.END
 
 async def handle_coin_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message or not update.message.text:
+        return ConversationHandler.END
+        
     text = update.message.text
     user_id = update.effective_user.id
     
@@ -167,6 +171,8 @@ async def handle_coin_selection(update: Update, context: ContextTypes.DEFAULT_TY
         return ConversationHandler.END
 
 async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message or not update.message.text:
+        return COIN_AMOUNT
     text = update.message.text
     
     if text == "❌ বাতিল":
@@ -201,6 +207,8 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return COIN_AMOUNT
 
 async def get_username(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message or not update.message.text:
+        return NIVA_USERNAME
     text = update.message.text
     
     if text == "❌ বাতিল":
@@ -234,6 +242,8 @@ async def get_username(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return PAYMENT_METHOD
 
 async def select_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message or not update.message.text:
+        return PAYMENT_METHOD
     text = update.message.text
     
     if text == "❌ বাতিল":
@@ -256,6 +266,8 @@ async def select_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def save_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global order_counter
+    if not update.message or not update.message.text:
+        return ConversationHandler.END
     text = update.message.text
     
     if text == "❌ বাতিল":
@@ -295,7 +307,7 @@ async def save_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     admin_msg = (
         f"📥 **নতুন সেল অর্ডার! (#Order_{order_id})**\n\n"
-        f"👤 ইউজার: [{u.first_name}](tg://user?id={u.id}) (`{u.id}`)\n"
+        f"👤 ইউজার: {u.first_name} (`{u.id}`)\n"
         f"🪙 কয়েন: **{c}**\n"
         f"🔢 পরিমাণ: **{amt}**\n"
         f"💰 মোট টাকা: **৳{tot}**\n"
