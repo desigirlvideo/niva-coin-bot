@@ -18,10 +18,11 @@ BOT_TOKEN = "8210193780:AAG3-gzVcqY7PHAHXT56J1HSBEm2ju6xQk0"
 ADMIN_ID = 5899402664
 LOG_CHANNEL_ID = -1003948006284
 SUPPORT_USERNAME = "ziaulx"
+COIN_TRANSFER_USERNAME = "@ziaulx90"  # আপনার কয়েন রিসিভ করার ইউজারনেম
 
-# Disabled Coins Config (বন্ধ রাখতে চাইলে মেসেজ দিন, চালু রাখতে খালি রাখতে পারেন)
+# Disabled Coins Config
 DISABLED_COINS = {
-    "New Top": "⚠️ **আন্তরিকভাবে দুঃখিত!**\nNew Top সেল সাময়িকভাবে বন্ধ আছে। দয়া করে কিছুক্ষণ পর চেষ্টা করুন।",
+    "Niva Coin": "⚠️ **আন্তরিকভাবে দুঃখিত!**\nNiva Coin সেল সাময়িকভাবে বন্ধ আছে। দয়া করে কিছুক্ষণ পর চেষ্টা করুন।",
     "Ns Coin": "⚠️ **আন্তরিকভাবে দুঃখিত!**\nNs Coin এর স্টক ফুল হয়ে গেছে। খুব শীঘ্রই আবার চালু করা হবে।"
 }
 
@@ -37,7 +38,8 @@ COIN_RATES_PER_1K = {
 user_orders = {}
 order_counter = 1000
 
-COIN_AMOUNT, PAYMENT_METHOD, ACCOUNT_NO = range(3)
+# Conversation States
+COIN_AMOUNT, NIVA_USERNAME, PAYMENT_METHOD, ACCOUNT_NO = range(4)
 
 # Web server setup
 app = Flask('')
@@ -65,7 +67,6 @@ def get_main_keyboard():
     return ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
 async def post_init(application: Application):
-    # Set bot commands for Menu button
     await application.bot.set_my_commands([
         BotCommand("start", "refresh / start bot")
     ])
@@ -106,7 +107,7 @@ async def handle_coin_selection(update: Update, context: ContextTypes.DEFAULT_TY
             msg += "📄 **আপনার কোনো উইথড্র বা সেল অর্ডার হিস্ট্রি নেই।**"
         else:
             msg += "📑 **আপনার অর্ডারের বিবরণী ও স্ট্যাটাস:**\n\n"
-            for idx, ord_data in enumerate(orders[::-1], 1):  # recent first
+            for idx, ord_data in enumerate(orders[::-1], 1):
                 status_icon = "⏳ Pending"
                 if ord_data['status'] == "Approved":
                     status_icon = "✅ Approved"
@@ -142,7 +143,6 @@ async def handle_coin_selection(update: Update, context: ContextTypes.DEFAULT_TY
             break
             
     if selected_coin:
-        # 🔻 কয়েন বন্ধ থাকলে এই অংশটি আটকাবে 🔻
         if selected_coin in DISABLED_COINS:
             await update.message.reply_text(
                 DISABLED_COINS[selected_coin],
@@ -150,7 +150,6 @@ async def handle_coin_selection(update: Update, context: ContextTypes.DEFAULT_TY
                 parse_mode='Markdown'
             )
             return ConversationHandler.END
-        # 🔺 ---------------------------------- 🔺
 
         context.user_data['coin'] = selected_coin
         cancel_keyboard = ReplyKeyboardMarkup([[KeyboardButton("❌ বাতিল")]], resize_keyboard=True)
@@ -181,35 +180,58 @@ async def get_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return COIN_AMOUNT
             
         coin = context.user_data['coin']
-        
         rate_per_1k = COIN_RATES_PER_1K[coin]
         total = round((amt / 1000.0) * rate_per_1k, 2)
         
         context.user_data['amt'] = amt
         context.user_data['total'] = total
         
-        warning = ""
-        if total < 20.0:
-            warning = "\n⚠️ **সতর্কতা:** সর্বনিম্ন উইথড্র পরিমাণ ২০ টাকা! এই অর্ডারের মোট টাকা ৳২০ এর কম।"
-            
-        payment_keyboard = ReplyKeyboardMarkup([
-            [KeyboardButton("bKash"), KeyboardButton("Nagad")],
-            [KeyboardButton("❌ বাতিল")]
-        ], resize_keyboard=True)
+        cancel_keyboard = ReplyKeyboardMarkup([[KeyboardButton("❌ বাতিল")]], resize_keyboard=True)
         
-        await update.message.reply_text(
-            f"📊 **অর্ডার সারসংক্ষেপ:**\n"
-            f"• কয়েন: {coin}\n"
-            f"• পরিমাণ: {amt} টি\n"
-            f"• মোট পাবেন: **৳{total}**{warning}\n\n"
-            f"👇 **আপনার পেমেন্ট মেথড সিলেক্ট করুন:**",
-            reply_markup=payment_keyboard,
-            parse_mode='Markdown'
+        username_prompt = (
+            f"📤 **কয়েন ট্রান্সফার করার জন্য নিচের আইডিতে সেন্ড করুন:**\n\n"
+            f"👤 **Target Username / ID:** `{COIN_TRANSFER_USERNAME}`\n\n"
+            f"🔗 ওপরের ইউজারনেমটি কপি করে কয়েন সেন্ড করুন এবং আপনার অ্যাকাউন্ট/ইউজারনেমটি এখানে লিখে পাঠান:"
         )
-        return PAYMENT_METHOD
+        await update.message.reply_text(username_prompt, reply_markup=cancel_keyboard, parse_mode='Markdown')
+        return NIVA_USERNAME
+        
     except ValueError:
         await update.message.reply_text("⚠️ ভুল ইনপুট! দয়া করে শুধু সংখ্যা লিখুন (যেমন: 4000):")
         return COIN_AMOUNT
+
+async def get_username(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+    
+    if text == "❌ বাতিল":
+        await update.message.reply_text("❌ প্রসেসটি বাতিল করা হয়েছে।", reply_markup=get_main_keyboard())
+        return ConversationHandler.END
+        
+    context.user_data['sender_account'] = text
+    
+    amt = context.user_data.get('amt')
+    total = context.user_data.get('total')
+    coin = context.user_data.get('coin')
+    
+    warning = ""
+    if total < 20.0:
+        warning = "\n⚠️ **সতর্কতা:** সর্বনিম্ন উইথড্র পরিমাণ ২০ টাকা! এই অর্ডারের মোট টাকা ৳২০ এর কম।"
+        
+    payment_keyboard = ReplyKeyboardMarkup([
+        [KeyboardButton("bKash"), KeyboardButton("Nagad")],
+        [KeyboardButton("❌ বাতিল")]
+    ], resize_keyboard=True)
+    
+    await update.message.reply_text(
+        f"📊 **অর্ডার সারসংক্ষেপ:**\n"
+        f"• কয়েন: {coin}\n"
+        f"• পরিমাণ: {amt} টি\n"
+        f"• মোট পাবেন: **৳{total}**{warning}\n\n"
+        f"👇 **আপনার পেমেন্ট মেথড সিলেক্ট করুন:**",
+        reply_markup=payment_keyboard,
+        parse_mode='Markdown'
+    )
+    return PAYMENT_METHOD
 
 async def select_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
@@ -224,7 +246,7 @@ async def select_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         await update.message.reply_text(
             f"📲 **{text} অ্যাকাউন্ট তথ্য:**\n"
-            f"আপনার {text} নম্বর এবং কয়েন পাঠানোর প্রুফ/ট্রানজেকশন আইডি লিখে জানান:",
+            f"আপনার {text} নম্বর এবং পেমেন্ট রিসিভ করার ডিটেইলস লিখে জানান:",
             reply_markup=cancel_keyboard
         )
         return ACCOUNT_NO
@@ -246,11 +268,11 @@ async def save_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     amt = context.user_data.get('amt')
     tot = context.user_data.get('total')
     m = context.user_data.get('method')
+    sender_acc = context.user_data.get('sender_account')
     
     order_id = order_counter
     order_counter += 1
 
-    # Save to user history
     order_item = {
         'id': order_id,
         'coin': c,
@@ -277,8 +299,9 @@ async def save_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"🪙 কয়েন: **{c}**\n"
         f"🔢 পরিমাণ: **{amt}**\n"
         f"💰 মোট টাকা: **৳{tot}**\n"
+        f"📤 সেন্ডারের অ্যাকাউন্ট/আইডি: `{sender_acc}`\n"
         f"💳 মেথড: **{m}**\n"
-        f"📝 ডিটেইলস: `{info}`"
+        f"📝 পেমেন্ট নম্বর/ডিটেইলস: `{info}`"
     )
     
     admin_buttons = InlineKeyboardMarkup([
@@ -352,6 +375,7 @@ def main():
         entry_points=[MessageHandler(filters.Regex(r'^(🪙|🔗|💳|💬)'), handle_coin_selection)],
         states={
             COIN_AMOUNT: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_amount)],
+            NIVA_USERNAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_username)],
             PAYMENT_METHOD: [MessageHandler(filters.TEXT & ~filters.COMMAND, select_payment)],
             ACCOUNT_NO: [MessageHandler(filters.TEXT & ~filters.COMMAND, save_order)],
         },
