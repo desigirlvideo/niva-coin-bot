@@ -22,13 +22,13 @@ COIN_TRANSFER_USERNAME = "@ziaulx90"
 
 # Disabled Coins Config
 DISABLED_COINS = {
-    "Niva Coin": "⚠️ <b>আন্তরিকভাবে দুঃখিত!</b>\nNiva Coin সেল সাময়িকভাবে বন্ধ আছে। দয়া করে কিছুক্ষণ পর চেষ্টা করুন।",
+    "New Top": "⚠️ <b>আন্তরিকভাবে দুঃখিত!</b>\nNew Top সেল সাময়িকভাবে বন্ধ আছে। দয়া করে কিছুক্ষণ পর চেষ্টা করুন।",
     "Ns Coin": "⚠️ <b>আন্তরিকভাবে দুঃখিত!</b>\nNs Coin এর স্টক ফুল হয়ে গেছে। খুব শীঘ্রই আবার চালু করা হবে।"
 }
 
 # Coin rates per 1000 (1K) coins
 COIN_RATES_PER_1K = {
-    "Niva Coin": 4.80,
+    "Niva Coin": 4.70,
     "Top Coin": 4.50,
     "Ns Coin": 9.80,
     "New Top": 5.50
@@ -79,6 +79,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"✅ সবচেয়ে বেশি রেট\n"
         f"✅ দ্রুত পেমেন্ট\n"
         f"✅ বাংলাদেশি পেমেন্ট মেথড (bKash/Nagad)\n"
+        f"✅ 9 Tarik Niva & Top coin\n"
         f"⚠️ <b>সর্বনিম্ন উইথড্র limit: ৳২০</b>\n\n"
         f"👇 <b>নিচের তালিকা থেকে আপনার কয়েন সিলেক্ট করুন:</b>"
     )
