@@ -16,13 +16,13 @@ from telegram.ext import (
 # Configurations
 BOT_TOKEN = "8210193780:AAG3-gzVcqY7PHAHXT56J1HSBEm2ju6xQk0"
 ADMIN_ID = 5899402664
-LOG_CHANNEL_ID = -1003948006284
+LOG_CHANNEL_ID = -10023948006284  # চ্যানেল ID সঠিক ফরম্যাটে আপডেট করা হয়েছে
 SUPPORT_USERNAME = "ziaulx"
-COIN_TRANSFER_USERNAME = "@ziaulx90"  # আপনার কয়েন রিসিভ করার ইউজারনেম
+COIN_TRANSFER_USERNAME = "@ziaulx90"
 
 # Disabled Coins Config
 DISABLED_COINS = {
-    "Niva Coin": "⚠️ **আন্তরিকভাবে দুঃখিত!**\nNiva Coin সেল সাময়িকভাবে বন্ধ আছে। দয়া করে কিছুক্ষণ পর চেষ্টা করুন।",
+    "New Top": "⚠️ **আন্তরিকভাবে দুঃখিত!**\nNew Top সেল সাময়িকভাবে বন্ধ আছে। দয়া করে কিছুক্ষণ পর চেষ্টা করুন।",
     "Ns Coin": "⚠️ **আন্তরিকভাবে দুঃখিত!**\nNs Coin এর স্টক ফুল হয়ে গেছে। খুব শীঘ্রই আবার চালু করা হবে।"
 }
 
