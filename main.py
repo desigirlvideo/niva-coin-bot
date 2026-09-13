@@ -27,11 +27,11 @@ DISABLED_COINS = {
     "Ns Coin": "⚠️ <b>আন্তরিকভাবে দুঃখিত!</b>\nNs Coin এর স্টক ফুল হয়ে গেছে। খুব শীঘ্রই আবার চালু করা হবে।"
 }
 
-# Coin rates per 1000 (1K) coins
+# Coin rates per (1K) coins
 COIN_RATES_PER_1K = {
-    "Niva Coin": 4.80,
+    "Niva Coin": 4.55,
     "Top Coin": 4.50,
-    "Ns Coin": 9.80,
+    "Ns Coin": 10.10,
     "New Top": 5.50
 }
 
